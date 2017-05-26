@@ -36,7 +36,7 @@ namespace Stateless.Tests
             var ignored = new StateMachine<State, Trigger>.IgnoredTriggerBehaviour(
                 Trigger.X, new StateMachine<State, Trigger>.TransitionGuard(False));
 
-            Assert.False(ignored.GuardConditionsMet);
+            Assert.False(ignored.CheckGuardConditions(null).Where(x => x.Value).Any());
         }
 
         protected bool True()
@@ -50,7 +50,7 @@ namespace Stateless.Tests
             var ignored = new StateMachine<State, Trigger>.IgnoredTriggerBehaviour(
                 Trigger.X, new StateMachine<State, Trigger>.TransitionGuard(True));
 
-            Assert.True(ignored.GuardConditionsMet);
+            Assert.True(ignored.CheckGuardConditions(null).Where(x => x.Value).Any());
         }
     }
 }

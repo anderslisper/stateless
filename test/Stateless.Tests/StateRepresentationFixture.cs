@@ -339,12 +339,12 @@ namespace Stateless.Tests
             super.AddTriggerBehaviour(transition);
 
             StateMachine<State, Trigger>.TriggerBehaviourResult result;
-            sub.TryFindHandler(Trigger.X, out result);
+            bool guardConditionsMet = sub.TryFindHandler(Trigger.X, null, out result);
 
             Assert.False(sub.CanHandle(Trigger.X));
             Assert.False(super.CanHandle(Trigger.X));
             Assert.NotNull(result);
-            Assert.False(result?.Handler.GuardConditionsMet);
+            Assert.False(guardConditionsMet);
             Assert.Contains("2", result?.UnmetGuardConditions.ToArray());
             
         }
@@ -364,12 +364,12 @@ namespace Stateless.Tests
 
             super.AddTriggerBehaviour(transition);
             StateMachine<State, Trigger>.TriggerBehaviourResult result;
-            sub.TryFindHandler(Trigger.X, out result);
+            bool guardConditionsMet = sub.TryFindHandler(Trigger.X, null, out result);
 
             Assert.True(sub.CanHandle(Trigger.X));
             Assert.True(super.CanHandle(Trigger.X));
             Assert.NotNull(result);     
-            Assert.True(result?.Handler.GuardConditionsMet);
+            Assert.True(guardConditionsMet);
             Assert.False(result?.UnmetGuardConditions.Any());
 
         }

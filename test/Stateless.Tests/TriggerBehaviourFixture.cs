@@ -28,7 +28,7 @@ namespace Stateless.Tests
             var transitioning = new StateMachine<State, Trigger>.TransitioningTriggerBehaviour(
                 Trigger.X, State.C, new StateMachine<State, Trigger>.TransitionGuard(False));
 
-            Assert.False(transitioning.GuardConditionsMet);
+            Assert.False(transitioning.CheckGuardConditions(null).Where(x => x.Value).Any());
         }
 
         protected bool True()
@@ -42,7 +42,7 @@ namespace Stateless.Tests
             var transitioning = new StateMachine<State, Trigger>.TransitioningTriggerBehaviour(
                 Trigger.X, State.C, new StateMachine<State, Trigger>.TransitionGuard(True));
 
-            Assert.True(transitioning.GuardConditionsMet);
+            Assert.True(transitioning.CheckGuardConditions(null).Where(x => x.Value).Any());
         }
 
         [Fact]
@@ -56,7 +56,7 @@ namespace Stateless.Tests
             var transitioning = new StateMachine<State, Trigger>.TransitioningTriggerBehaviour(
                 Trigger.X, State.C, new StateMachine<State, Trigger>.TransitionGuard(falseGuard));
 
-            Assert.True(transitioning.GuardConditionsMet);
+            Assert.True(transitioning.CheckGuardConditions(null).Where(x => x.Value).Any());
         }
 
         [Fact]
@@ -70,7 +70,7 @@ namespace Stateless.Tests
             var transitioning = new StateMachine<State, Trigger>.TransitioningTriggerBehaviour(
                 Trigger.X, State.C, new StateMachine<State, Trigger>.TransitionGuard(falseGuard));
 
-            Assert.False(transitioning.GuardConditionsMet);
+            Assert.False(transitioning.CheckGuardConditions(null).Where(x => x.Value).Any());
         }
 
         [Fact]
@@ -84,7 +84,7 @@ namespace Stateless.Tests
             var transitioning = new StateMachine<State, Trigger>.TransitioningTriggerBehaviour(
                 Trigger.X, State.C, new StateMachine<State, Trigger>.TransitionGuard(trueGuard));
 
-            Assert.True(transitioning.GuardConditionsMet);
+            Assert.True(transitioning.CheckGuardConditions(null).Where(x => x.Value).Any());
         }
     }
 }

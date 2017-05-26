@@ -28,22 +28,34 @@ namespace Stateless
             /// </summary>
             internal TransitionGuard Guard { get; set; }
 
-            /// <summary>
-            /// Guards is the list of guard functions for the transition guard for this trigger
-            /// </summary>
-            internal ICollection<Func<bool>> Guards => Guard.Guards;
+            // <summary>
+            // Guards is the list of guard functions for the transition guard for this trigger
+            // </summary>
+            // internal ICollection<Func<bool>> Guards => Guard.Guards;
+
+            // <summary>
+            // GuardConditionsMet is true if all of the guard functions return true
+            // or if there are no guard functions
+            // </summary>
+            // public bool GuardConditionsMet => Guard.GuardConditionsMet;
 
             /// <summary>
-            /// GuardConditionsMet is true if all of the guard functions return true
-            /// or if there are no guard functions
+            /// Returns a list showing all of the guard conditions and whether they have
+            /// been met or not
             /// </summary>
-            public bool GuardConditionsMet => Guard.GuardConditionsMet;
+            /// <param name="args"></param>
+            /// <returns></returns>
+            public Dictionary<IGuardCondition, bool> CheckGuardConditions(object[] args)
+                => Guard.CheckGuardConditions(args);
 
-            /// <summary>
-            /// UnmetGuardConditions is a list of the descriptions of all guard conditions
-            /// whose guard function returns false
-            /// </summary>
-            public ICollection<string> UnmetGuardConditions => Guard.UnmetGuardConditions;
+            public bool GuardConditionsAreSatsified(object[] args)
+            { return Guard.GuardConditionsAreSatsified(args); }
+
+            // <summary>
+            // UnmetGuardConditions is a list of the descriptions of all guard conditions
+            // whose guard function returns false
+            // </summary>
+            // public ICollection<string> UnmetGuardConditions => Guard.UnmetGuardConditions;
 
             public abstract bool ResultsInTransitionFrom(TState source, object[] args, out TState destination);
 

@@ -36,6 +36,21 @@ namespace Stateless
             }
 
             /// <summary>
+            /// Specify a guard condition for this transition.  Used for a parameterized trigger, the
+            /// guard function will be passed the single argument from the trigger.
+            /// </summary>
+            /// <typeparam name="TArg0"></typeparam>
+            /// <param name="guard"></param>
+            /// <param name="guardDescription"></param>
+            /// <returns></returns>
+            public TriggerConfiguration If<TArg0>(Func<TArg0, bool> guard, string guardDescription = null)
+            {
+                Trigger.Guard = TransitionGuard.Create<TArg0>(guard, guardDescription);
+
+                return this;
+            }
+
+            /// <summary>
             /// Specify an action to be executed when this transition is executed
             /// </summary>
             /// <param name="action"></param>

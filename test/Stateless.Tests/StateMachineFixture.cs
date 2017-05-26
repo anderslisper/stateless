@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using Xunit;
 
@@ -105,7 +106,7 @@ namespace Stateless.Tests
             sm.Configure(State.C)
                 .Permit(Trigger.Y, State.A);
 
-            var permitted = sm.PermittedTriggers;
+            var permitted = sm.GetPermittedTriggers(null);
 
             Assert.True(permitted.Contains(Trigger.X));
             Assert.True(permitted.Contains(Trigger.Y));
@@ -115,6 +116,8 @@ namespace Stateless.Tests
         [Fact]
         public void PermittedTriggersAreDistinctValues()
         {
+            Debug.WriteLine("PermittedTriggersAreDistinctValues()");
+
             var sm = new StateMachine<State, Trigger>(State.B);
 
             sm.Configure(State.B)
@@ -124,7 +127,7 @@ namespace Stateless.Tests
             sm.Configure(State.C)
                 .Permit(Trigger.X, State.B);
 
-            var permitted = sm.PermittedTriggers;
+            var permitted = sm.GetPermittedTriggers(null);
             Assert.Equal(1, permitted.Count());
             Assert.Equal(Trigger.X, permitted.First());
         }
@@ -132,12 +135,14 @@ namespace Stateless.Tests
         [Fact]
         public void AcceptedTriggersRespectGuards()
         {
+            Debug.WriteLine("StateMachineFixture.AcceptedTriggersRespectGuards()");
+
             var sm = new StateMachine<State, Trigger>(State.B);
 
             sm.Configure(State.B)
                 .PermitIf(Trigger.X, State.A, () => false);
 
-            Assert.Equal(0, sm.PermittedTriggers.Count());
+            Assert.Equal(0, sm.GetPermittedTriggers(null).Count());
         }
 
         [Fact]
@@ -150,7 +155,7 @@ namespace Stateless.Tests
                     new Tuple<Func<bool>, string>(() => true, "1"),
                     new Tuple<Func<bool>, string>(() => false, "2"));
 
-            Assert.Equal(0, sm.PermittedTriggers.Count());
+            Assert.Equal(1, sm.GetPermittedTriggers(null).Count());
         }
 
         [Fact]

@@ -1,6 +1,7 @@
 ﻿using Stateless.Reflection;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 
 namespace Stateless
@@ -77,12 +78,11 @@ namespace Stateless
         /// <summary>
         /// The currently-permissible trigger values.
         /// </summary>
-        public IEnumerable<TTrigger> PermittedTriggers
+        public IEnumerable<TTrigger> GetPermittedTriggers(object[] args)
         {
-            get
-            {
-                return CurrentRepresentation.PermittedTriggers;
-            }
+            Debug.WriteLine("StateMaching.GetPermittedTriggers()");
+
+            return CurrentRepresentation.GetPermittedTriggers(args);
         }
 
         StateRepresentation CurrentRepresentation
@@ -277,7 +277,7 @@ namespace Stateless
             var representativeState = GetRepresentation(source);
 
             TriggerBehaviourResult result;
-            if (!representativeState.TryFindHandler(trigger, out result))
+            if (!representativeState.TryFindHandler(trigger, args, out result))
             {
                 _unhandledTriggerAction.Execute(representativeState.UnderlyingState, trigger, result?.UnmetGuardConditions);
                 return;
@@ -361,7 +361,7 @@ namespace Stateless
             return string.Format(
                 "StateMachine {{ State = {0}, PermittedTriggers = {{ {1} }}}}",
                 State,
-                string.Join(", ", PermittedTriggers.Select(t => t.ToString()).ToArray()));
+                string.Join(", ", GetPermittedTriggers(null).Select(t => t.ToString()).ToArray()));
         }
 
         /// <summary>

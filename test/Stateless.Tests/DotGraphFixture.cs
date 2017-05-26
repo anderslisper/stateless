@@ -1,6 +1,7 @@
 ﻿using System;
 using Xunit;
 using Stateless.Reflection;
+using System.Diagnostics;
 using Stateless.DotGraph;
 
 namespace Stateless.Tests
@@ -57,7 +58,11 @@ namespace Stateless.Tests
         [Fact]
         public void WhenDiscriminatedByAnonymousGuard_DotGraph()
         {
-            Func<bool> anonymousGuard = () => true;
+            Func<bool> anonymousGuard = () =>
+            {
+                Debug.WriteLine("Yup");
+                return true;
+            };
 
             var expected = "digraph {" + System.Environment.NewLine
                          + " A -> B [label=\"X [" + InvocationInfo.DefaultFunctionDescription +"]\"];" + System.Environment.NewLine
@@ -65,8 +70,13 @@ namespace Stateless.Tests
 
             var sm = new StateMachine<State, Trigger>(State.A);
 
+            StateMachine<State, Trigger>.TriggerWithParameters<string> trig = sm.SetTriggerParameters<string>(Trigger.X);
+
             sm.Configure(State.A)
                 .Permit(Trigger.X, State.B).If(anonymousGuard);
+
+            // DEBUG ONLY
+            sm.Fire(trig, "Hello");
 
             Assert.Equal(expected, DotGraphFormatter.Format(sm.GetInfo()));
         }

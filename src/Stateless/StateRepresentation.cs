@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -48,47 +49,63 @@ namespace Stateless
             public bool CanHandle(TTrigger trigger)
             {
                 TriggerBehaviourResult unused;
-                return TryFindHandler(trigger, out unused);
+                return TryFindHandler(trigger, null, out unused);
             }
 
-            public bool TryFindHandler(TTrigger trigger, out TriggerBehaviourResult handler)
+            /// <summary>
+            /// Returns true if handler is found for the specified trigger and arguments
+            /// </summary>
+            /// <param name="trigger"></param>
+            /// <param name="args"></param>
+            /// <param name="handler"></param>
+            /// <returns></returns>
+            public bool TryFindHandler(TTrigger trigger, object[] args, out TriggerBehaviourResult handler)
             {
-                return (TryFindLocalHandler(trigger, out handler) ||
-                    (Superstate != null && Superstate.TryFindHandler(trigger, out handler)));
+                return (TryFindLocalHandler(trigger, args, out handler) ||
+                    (Superstate != null && Superstate.TryFindHandler(trigger, args, out handler)));
             }
 
-            bool TryFindLocalHandler(TTrigger trigger, out TriggerBehaviourResult handlerResult)
+            /// <summary>
+            /// Returns true if handler is found for the specified trigger and arguments
+            /// </summary>
+            /// <param name="trigger"></param>
+            /// <param name="args"></param>
+            /// <param name="handlerResult"></param>
+            /// <returns></returns>
+            bool TryFindLocalHandler(TTrigger trigger, object[] args, out TriggerBehaviourResult handlerResult)
             {
                 ICollection<TriggerBehaviour> possible;
+
+                // Get all of the behaviours that handle the specified trigger (not worrying about guard conditions)
                 if (!_triggerBehaviours.TryGetValue(trigger, out possible))
                 {
                     handlerResult = null;
                     return false;
                 }
 
-                // Guard functions executed
-                var actual = possible
-                    .Select(h => new TriggerBehaviourResult(h, h.UnmetGuardConditions));
-        
-                handlerResult = TryFindLocalHandlerResult(trigger, actual, r => !r.UnmetGuardConditions.Any())
-                    ?? TryFindLocalHandlerResult(trigger, actual, r => r.UnmetGuardConditions.Any());
+                TriggerBehaviourResult unhandled = null;
 
-                return !handlerResult.UnmetGuardConditions.Any();
+                foreach (TriggerBehaviour tb in possible)
+                {
+                    Dictionary<IGuardCondition, bool> check = tb.CheckGuardConditions(args);
+                    IEnumerable<string> unmetConditions = check.Where(x => !x.Value).Select(x => x.Key.Description);
+                    if (unmetConditions.Any())
+                    {
+                        if (unhandled == null)
+                            unhandled = new TriggerBehaviourResult(tb, unmetConditions.ToList());
+                    }
+                    else
+                    {
+                        IEnumerable<string> satisfiedConditions = check.Where(x => x.Value).Select(x => x.Key.Description);
+                        handlerResult = new TriggerBehaviourResult(tb, new List<string>());
+                        return true;
+                    }
+                }
+
+                handlerResult = unhandled;
+                return false;
             }
 
-            TriggerBehaviourResult TryFindLocalHandlerResult(TTrigger trigger, IEnumerable<TriggerBehaviourResult> results, Func<TriggerBehaviourResult, bool> filter)
-            {
-                var actual = results
-                    .Where(filter);
-
-                if (actual.Count() > 1)
-                    throw new InvalidOperationException(
-                        string.Format(StateRepresentationResources.MultipleTransitionsPermitted,
-                        trigger, _state));
-
-                return actual
-                    .FirstOrDefault();
-            }
             public void AddActivateAction(Action action, Reflection.InvocationInfo activateActionDescription)
             {
                 _activateActions.Add(
@@ -301,19 +318,18 @@ namespace Stateless
                     (_superstate != null && _superstate.IsIncludedIn(state));
             }
 
-            public IEnumerable<TTrigger> PermittedTriggers
+            public IEnumerable<TTrigger> GetPermittedTriggers(object[] args)
             {
-                get
-                {
-                    var result = _triggerBehaviours
-                        .Where(t => t.Value.Any(a => !a.UnmetGuardConditions.Any()))
-                        .Select(t => t.Key);
+                Debug.WriteLine("StateRepresentation.GetPermittedTriggers(args) [_state=" + _state + ", Superstate=" + Superstate + "]");
 
-                    if (Superstate != null)
-                        result = result.Union(Superstate.PermittedTriggers);
+                var result = _triggerBehaviours
+                    .Where(t => t.Value.Any(a => a.GuardConditionsAreSatsified(args)))
+                    .Select(t => t.Key);
 
-                    return result.ToArray();
-                }
+                if (Superstate != null)
+                    result = result.Union(Superstate.GetPermittedTriggers(args));
+
+                return result.ToArray();
             }
 
             internal void InternalAction(Transition transition, object[] args)
